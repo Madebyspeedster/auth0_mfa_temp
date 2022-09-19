@@ -3,9 +3,8 @@ import {useAuth0} from "@auth0/auth0-react";
 import {Button} from "reactstrap";
 
 
-
 const getUserMeta = (user) => {
-    return fetch(`https://helpmebear.herokuapp.com/level-field/get-user-data?userId=${encodeURI(`${user.sub}`)}`,  {
+    return fetch(`https://helpmebear.herokuapp.com/level-field/get-user-data?userId=${encodeURI(`${user.sub}`)}`, {
         headers: {
             "Content-Type": "application/json",
         },
@@ -18,8 +17,6 @@ const getUserMeta = (user) => {
 }
 
 
-
-
 const Home = () => {
     const {getAccessTokenWithPopup, user} = useAuth0();
     const [loading, setIsLoading] = useState(false);
@@ -29,7 +26,7 @@ const Home = () => {
     const commitTransaction = useCallback(async () => {
         setIsLoading(true);
         const userInfo = await getUserMeta(user);
-        if(!userInfo?.enrolments?.length) {
+        if (!userInfo?.enrolments?.length) {
             setShouldGenerateMFA(true);
             setIsLoading(false);
             return;
@@ -42,7 +39,7 @@ const Home = () => {
 
     const generateMFA = useCallback((user) => {
         setIsLoading(true);
-        return fetch(`https://helpmebear.herokuapp.com/level-field/generate-mfa?userId=${encodeURI(`${user.sub}`)}`,  {
+        return fetch(`https://helpmebear.herokuapp.com/level-field/generate-mfa?userId=${encodeURI(`${user.sub}`)}`, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -50,32 +47,32 @@ const Home = () => {
             .then(result => result.json())
             .then(({ticket}) => {
                 console.log(ticket)
-                if(ticket.ticket_url){
+                if (ticket.ticket_url) {
                     setShouldGenerateMFA(false);
-                    window.open(ticket.ticket_url,  "mozillaWindow", "popup")
+                    const w = 600;
+                    const h = 600;
+                    const left = (window.screen.width / 2) - (w / 2);
+                    const top = (window.screen.height / 2) - (h / 2);
+                    window.open(ticket.ticket_url, 'MFA', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
                 }
             })
             .catch(e => {
                 console.log(e)
             })
-            .finally(() => {setIsLoading(false)})
+            .finally(() => {
+                setIsLoading(false)
+            })
     }, [])
 
-    return (
-        <Fragment>
-            {user && (<Button onClick={commitTransaction}> {loading ? 'wait' : 'confirm transaction' }</Button>)}
-            {transactionDone && (
-                <h3 style={{margin: 15}}>All good! 🥳</h3>
-            )}
-            {shouldGenerateMfa && (
-               <>
-                   <h3 style={{margin: 15}}>Hey, in order to proceed we want you to setup MFA 📱</h3>
-                   <Button onClick={() => generateMFA(user)}>{loading ? 'wait': 'Setup MFA'}</Button>
-               </>
-            )}
-            <hr/>
-        </Fragment>
-    )
+    return (<Fragment>
+        {user && (<Button onClick={commitTransaction}> {loading ? 'wait' : 'confirm transaction'}</Button>)}
+        {transactionDone && (<h3 style={{margin: 15}}>All good! 🥳</h3>)}
+        {shouldGenerateMfa && (<>
+            <h3 style={{margin: 15}}>Hey, in order to proceed we want you to setup MFA 📱</h3>
+            <Button onClick={() => generateMFA(user)}>{loading ? 'wait' : 'Setup MFA'}</Button>
+        </>)}
+        <hr/>
+    </Fragment>)
 };
 
 export default Home;
